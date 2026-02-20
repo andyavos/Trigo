@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="theme-color" content="#1a3c34">
+  <title>Trig Points Near Me</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f2922;
+      --surface: #1a3c34;
+      --accent: #3d9b7a;
+      --accent-hover: #4db88a;
+      --text: #e8f0ed;
+      --text-muted: #8fa89e;
+      --radius: 12px;
+      --safe-top: env(safe-area-inset-top, 0);
+      --safe-bottom: env(safe-area-inset-bottom, 0);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      min-height: 100dvh;
+      min-height: 100vh;
+    }
+
+    body {
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .toolbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 10;
+      padding: calc(12px + var(--safe-top)) 16px 12px;
+      background: linear-gradient(to bottom, var(--bg) 60%, transparent);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .toolbar h1 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      flex: 1 1 100%;
+      color: var(--text);
+    }
+
+    .control-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    select {
+      font-family: inherit;
+      font-size: 0.95rem;
+      padding: 10px 14px;
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      -webkit-appearance: none;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%238fa89e' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 36px;
+    }
+
+    .btn {
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 600;
+      padding: 10px 18px;
+      border: none;
+      border-radius: var(--radius);
+      background: var(--accent);
+      color: #fff;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.2s;
+    }
+
+    .btn:hover, .btn:focus-visible {
+      background: var(--accent-hover);
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    #map {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      height: 100%;
+      min-height: 100dvh;
+      min-height: 100vh;
+      z-index: 0;
+    }
+
+    .status {
+      position: fixed;
+      bottom: calc(24px + var(--safe-bottom));
+      left: 16px;
+      right: 16px;
+      z-index: 5;
+      padding: 12px 16px;
+      background: var(--surface);
+      border-radius: var(--radius);
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      display: none;
+    }
+
+    .status.visible {
+      display: block;
+    }
+
+    .status.error {
+      color: #e07a7a;
+    }
+
+    .status.success {
+      color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <h1>Trig points</h1>
+    <div class="control-row">
+      <label for="radius">Within</label>
+      <select id="radius">
+        <option value="5">5 km</option>
+        <option value="10" selected>10 km</option>
+        <option value="25">25 km</option>
+        <option value="50">50 km</option>
+      </select>
+      <label for="type">Type</label>
+      <select id="type">
+        <option value="">All types</option>
+      </select>
+      <button type="button" class="btn" id="locate">My location</button>
+    </div>
+  </div>
+
+  <div id="map"></div>
+
+  <div id="status" class="status" role="status" aria-live="polite"></div>
+
+  <script>
+    (function() {
+      const GOOGLE_MAPS_API_KEY = 'AIzaSyC3vmNOjtsHWx_N2I-Atps_5ShlisrjUI4';
+
+      const statusEl = document.getElementById('status');
+      const radiusSelect = document.getElementById('radius');
+      const typeSelect = document.getElementById('type');
+      const locateBtn = document.getElementById('locate');
+
+      let map = null;
+      let userMarker = null;
+      let trigMarkers = [];
+      let trigData = [];
+      let userPosition = null;
+
+      function showStatus(msg, type = '') {
+        statusEl.textContent = msg;
+        statusEl.className = 'status visible ' + type;
+      }
+
+      function hideStatus() {
+        statusEl.className = 'status';
+      }
+
+      function haversineKm(lat1, lon1, lat2, lon2) {
+        const R = 6371;
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a =
+          Math.sin(dLat / 2) ** 2 +
+          Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+      }
+
+      function parseCSV(text) {
+        const lines = text.trim().split(/\r?\n/);
+        if (lines.length < 2) return [];
+        const header = lines[0].split(',');
+        const latIdx = header.indexOf('lat');
+        const longIdx = header.indexOf('long');
+        const tpNumIdx = header.indexOf('tp_num');
+        const tpNameIdx = header.indexOf('tp_name');
+        const fullNameIdx = header.indexOf('full_name');
+        const typeIdx = header.indexOf('type');
+        const conditionIdx = header.indexOf('condition');
+        const heightIdx = header.indexOf('height_m');
+        if (latIdx < 0 || longIdx < 0) return [];
+
+        const rows = [];
+        for (let i = 1; i < lines.length; i++) {
+          const row = parseCSVLine(lines[i]);
+          if (row.length <= Math.max(latIdx, longIdx)) continue;
+          const lat = parseFloat(row[latIdx]);
+          const long = parseFloat(row[longIdx]);
+          if (isNaN(lat) || isNaN(long)) continue;
+          rows.push({
+            lat,
+            lon: long,
+            tp_num: row[tpNumIdx] || '',
+            tp_name: row[tpNameIdx] || '',
+            full_name: row[fullNameIdx] || '',
+            type: row[typeIdx] || '',
+            condition: row[conditionIdx] || '',
+            height_m: row[heightIdx] || ''
+          });
+        }
+        return rows;
+      }
+
+      function parseCSVLine(line) {
+        const out = [];
+        let cur = '';
+        let inQuotes = false;
+        for (let i = 0; i < line.length; i++) {
+          const c = line[i];
+          if (c === '"') {
+            inQuotes = !inQuotes;
+          } else if (inQuotes) {
+            cur += c;
+          } else if (c === ',') {
+            out.push(cur.trim());
+            cur = '';
+          } else {
+            cur += c;
+          }
+        }
+        out.push(cur.trim());
+        return out;
+      }
+
+      function loadTrigData() {
+        return fetch('trigdatabase.csv')
+          .then(r => {
+            if (!r.ok) throw new Error('Could not load trig database. Serve this folder over HTTP (e.g. python -m http.server 8080).');
+            return r.text();
+          })
+          .then(text => {
+            trigData = parseCSV(text);
+            return trigData;
+          });
+      }
+
+      function getTrigsInRadius(centerLat, centerLon, radiusKm) {
+        const typeFilter = typeSelect.value;
+        return trigData.filter(t => {
+          const d = haversineKm(centerLat, centerLon, t.lat, t.lon);
+          t._distance = d;
+          if (d > radiusKm) return false;
+          if (typeFilter && t.type !== typeFilter) return false;
+          return true;
+        }).sort((a, b) => a._distance - b._distance);
+      }
+
+      function clearTrigs() {
+        trigMarkers.forEach(m => { m.map = null; });
+        trigMarkers = [];
+      }
+
+      function showTrigsOnMap(trigs) {
+        clearTrigs();
+        if (!map || !trigs.length) return;
+
+        const AdvancedMarkerElement = google.maps.marker.AdvancedMarkerElement;
+        const PinElement = google.maps.marker.PinElement;
+        const bounds = new google.maps.LatLngBounds();
+
+        trigs.forEach(t => {
+          const pin = new PinElement({
+            background: '#3d9b7a',
+            borderColor: '#fff',
+            scale: 0.8
+          });
+          const marker = new AdvancedMarkerElement({
+            position: { lat: t.lat, lng: t.lon },
+            map,
+            title: t.full_name || t.tp_name,
+            content: pin.element
+          });
+
+          const infoContent = [
+            '<strong>' + (t.full_name || t.tp_name || t.tp_num) + '</strong>',
+            t.type ? '<div>Type: ' + t.type + '</div>' : '',
+            t.condition ? '<div>Condition: ' + t.condition + '</div>' : '',
+            t.height_m ? '<div>Height: ' + t.height_m + ' m</div>' : '',
+            '<div style="margin-top:6px; color:#3d9b7a;">' + t._distance.toFixed(1) + ' km away</div>'
+          ].filter(Boolean).join('');
+
+          const info = new google.maps.InfoWindow({ content: infoContent });
+          marker.addListener('click', () => {
+            info.open(map, marker);
+          });
+
+          trigMarkers.push(marker);
+          bounds.extend(marker.position);
+        });
+
+        if (trigs.length > 0) {
+          const padding = 40;
+          map.fitBounds(bounds, padding);
+        }
+      }
+
+      function updateTrigsFromUser() {
+        if (!userPosition) return;
+        const radiusKm = parseInt(radiusSelect.value, 10);
+        const trigs = getTrigsInRadius(userPosition.lat, userPosition.lng, radiusKm);
+        showTrigsOnMap(trigs);
+        showStatus(trigs.length + ' trig point' + (trigs.length !== 1 ? 's' : '') + ' within ' + radiusKm + ' km', 'success');
+        setTimeout(hideStatus, 3000);
+      }
+
+      function initMap() {
+        const defaultCenter = { lat: 53.5, lng: -2.0 };
+        const mapEl = document.getElementById('map');
+        map = new google.maps.Map(mapEl, {
+          center: defaultCenter,
+          zoom: 8,
+          mapId: 'DEMO_MAP_ID',
+          styles: [
+            { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+            { featureType: 'transit', stylers: [{ visibility: 'off' }] }
+          ],
+          mapTypeControl: true,
+          fullscreenControl: true,
+          zoomControl: true,
+          streetViewControl: false
+        });
+
+        radiusSelect.addEventListener('change', () => {
+          if (userPosition) updateTrigsFromUser();
+        });
+        typeSelect.addEventListener('change', () => {
+          if (userPosition) updateTrigsFromUser();
+        });
+      }
+
+      function populateTypeFilter() {
+        const types = [...new Set(trigData.map(t => t.type).filter(Boolean))].sort();
+        typeSelect.innerHTML = '<option value="">All types</option>';
+        types.forEach(type => {
+          const opt = document.createElement('option');
+          opt.value = type;
+          opt.textContent = type;
+          typeSelect.appendChild(opt);
+        });
+      }
+
+      function onLocationSuccess(position) {
+        userPosition = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude
+        };
+
+        if (userMarker) userMarker.map = null;
+        const userPin = new google.maps.marker.PinElement({
+          background: '#1a73e8',
+          borderColor: '#fff',
+          scale: 1.1
+        });
+        userMarker = new google.maps.marker.AdvancedMarkerElement({
+          position: userPosition,
+          map,
+          title: 'You',
+          content: userPin.element
+        });
+
+        map.setCenter(userPosition);
+        map.setZoom(12);
+        updateTrigsFromUser();
+      }
+
+      function onLocationError(err) {
+        showStatus('Location denied or unavailable. Enable location for this site and try again.', 'error');
+      }
+
+      locateBtn.addEventListener('click', () => {
+        showStatus('Getting your location…');
+        if (!navigator.geolocation) {
+          showStatus('Geolocation is not supported by your browser.', 'error');
+          return;
+        }
+        navigator.geolocation.getCurrentPosition(onLocationSuccess, onLocationError, {
+          enableHighAccuracy: true,
+          timeout: 15000,
+          maximumAge: 60000
+        });
+      });
+
+      function bootstrap() {
+        showStatus('Loading trig database…');
+        loadTrigData()
+          .then(() => {
+            populateTypeFilter();
+            showStatus('Database loaded. Tap "My location" to find trig points nearby.');
+            setTimeout(hideStatus, 4000);
+          })
+          .catch(err => {
+            showStatus(err.message || 'Failed to load data.', 'error');
+          });
+      }
+
+      if (typeof google === 'undefined' || typeof google.maps === 'undefined') {
+        const script = document.createElement('script');
+        script.src = 'https://maps.googleapis.com/maps/api/js?key=' + GOOGLE_MAPS_API_KEY + '&callback=initMap&loading=async&libraries=marker';
+        script.async = true;
+        script.defer = true;
+        window.initMap = function() {
+          initMap();
+          bootstrap();
+        };
+        document.head.appendChild(script);
+      } else {
+        initMap();
+        bootstrap();
+      }
+    })();
+  </script>
+</body>
+</html>
