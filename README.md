@@ -1,8 +1,6 @@
 # Trigo
 
-A simple app for finding nearby triangulation stations within a chosen radius on Google Maps, using your current location.
-
-The data currently used for this from Lonewalker's database: https://lonewalker.net/trigtable.php - I've not tested the correctness of this database, and it should be treated as such (see the disclaimer on that page).
+**A simple app for finding nearby triangulation stations within a chosen radius on Google Maps, using your current location.**
 
 ## Setup
 
@@ -48,3 +46,5 @@ The data currently used for this from Lonewalker's database: https://lonewalker.
 ## Data
 
 Uses `trigdatabase.csv` (columns: `lat`, `long`, `tp_num`, `tp_name`, `full_name`, `type`, `condition`, `height_m`). The CSV is loaded once; filtering by radius is done in the browser with the Haversine formula.
+
+The data currently used for this from Lonewalker's database: https://lonewalker.net/trigtable.php - I've not tested the correctness of this database, and it should be treated as such (see the disclaimer on that page).
