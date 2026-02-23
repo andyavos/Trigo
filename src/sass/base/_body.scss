@@ -1,0 +1,16 @@
+@use "../abstracts/variables" as *;
+
+html,
+body {
+  height: 100%;
+  min-height: 100dvh;
+  min-height: 100vh; // fallback for browsers without dvh support
+}
+
+body {
+  background: $bg;
+  color: $text;
+  font-family: "DM Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+}

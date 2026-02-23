@@ -1,0 +1,147 @@
+@use "../abstracts/variables" as *;
+
+// ── Map canvas ────────────────────────────────────────────────────────────────
+#map {
+  bottom: 0;
+  height: 100%;
+  left: 0;
+  min-height: 100dvh;
+  min-height: 100vh;
+  position: fixed;
+  right: 0;
+  top: 0;
+  width: 100%;
+  z-index: 0;
+}
+
+// ── Trig pin ──────────────────────────────────────────────────────────────────
+.trig-pin {
+  background: $accent;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+  height: $pin-size;
+  transition: transform 0.15s;
+  width: $pin-size;
+
+  &:hover {
+    transform: scale(1.5);
+    z-index: 1;
+  }
+
+  // Pillar — the classic trig point
+  &--pillar { background: $accent; }
+
+  // Intersected Station — secondary survey point
+  &--intersected-station { background: #7a9b3d; }
+
+  // Surface Block / Buried Block
+  &--surface-block,
+  &--buried-block { background: #9b7a3d; }
+
+  // Bolt / Platform Bolt — small, flush-mounted
+  &--bolt,
+  &--platform-bolt {
+    background: #7a3d9b;
+    height: 10px;
+    width: 10px;
+  }
+
+  // Rivet — tiny, flush
+  &--rivet {
+    background: #9b3d7a;
+    height: 8px;
+    width: 8px;
+  }
+
+  // FBM (Fundamental Bench Mark) — important survey datum
+  &--fbm {
+    background: #e0a030;
+    height: 16px;
+    width: 16px;
+  }
+
+  // Active station
+  &--active-station { background: #3d7a9b; }
+
+  // Everything else
+  &--berntsen,
+  &--disc,
+  &--concrete-ring,
+  &--brass-plate,
+  &--pipe,
+  &--cut,
+  &--spider,
+  &--fenomark,
+  &--curry-stool,
+  &--cannon,
+  &--other { background: $text-muted; }
+}
+
+// ── Trig popup (InfoWindow) ───────────────────────────────────────────────────
+// Override Google's outer chrome
+.gm-style .gm-style-iw-c {
+  background: $surface !important;
+  border-radius: $radius !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+  padding: 0 !important;
+}
+
+.gm-style .gm-style-iw-d {
+  overflow: hidden !important;
+}
+
+.gm-style .gm-style-iw-tc::after {
+  background: $surface !important;
+}
+
+.gm-style .gm-style-iw-chr {
+  position: absolute;
+  right: 4px;
+  top: 4px;
+
+  button {
+    color: $text-muted !important;
+    height: 24px !important;
+    opacity: 0.7;
+    width: 24px !important;
+
+    &:hover { opacity: 1; }
+
+    span { display: none !important; }
+
+    &::after {
+      color: $text-muted;
+      content: "×";
+      font-size: 1.2rem;
+      line-height: 1;
+    }
+  }
+}
+
+// Popup content
+.trig-popup {
+  color: $text;
+  font-family: "DM Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 0.9rem;
+  min-width: 160px;
+  padding: 14px 16px;
+
+  &__name {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  &__meta {
+    color: $text-muted;
+    margin-top: 3px;
+  }
+
+  &__distance {
+    color: $accent;
+    font-weight: 600;
+    margin-top: 8px;
+  }
+}
