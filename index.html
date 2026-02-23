@@ -14,152 +14,8 @@
             href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&display=swap"
             rel="stylesheet"
         >
-        <style>
-        :root {
-            --bg: #0f2922;
-            --surface: #1a3c34;
-            --accent: #3d9b7a;
-            --accent-hover: #4db88a;
-            --text: #e8f0ed;
-            --text-muted: #8fa89e;
-            --radius: 12px;
-            --safe-top: env(safe-area-inset-top, 0);
-            --safe-bottom: env(safe-area-inset-bottom, 0);
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        html, body {
-            height: 100%;
-            min-height: 100dvh;
-            min-height: 100vh;
-        }
-
-        body {
-            background: var(--bg);
-            color: var(--text);
-            font-family: "DM Sans", -apple-system, BlinkMacSystemFont, sans-serif;
-            overflow: hidden;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .toolbar {
-            align-items: center;
-            background: linear-gradient(to bottom, var(--bg) 60%, transparent);
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            left: 0;
-            padding: calc(12px + var(--safe-top)) 16px 12px;
-            position: fixed;
-            right: 0;
-            top: 0;
-            z-index: 10;
-        }
-
-        .toolbar h1 {
-            color: var(--text);
-            flex: 1 1 100%;
-            font-size: 1.1rem;
-            font-weight: 700;
-        }
-
-        .control-row {
-            align-items: center;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        label {
-            color: var(--text-muted);
-            font-size: 0.85rem;
-        }
-
-        select {
-            -webkit-appearance: none;
-            appearance: none;
-            background: var(--surface);
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%238fa89e' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
-            background-position: right 12px center;
-            background-repeat: no-repeat;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: var(--radius);
-            color: var(--text);
-            cursor: pointer;
-            font-family: inherit;
-            font-size: 0.95rem;
-            padding: 10px 14px;
-            padding-right: 36px;
-        }
-
-        .btn {
-            background: var(--accent);
-            border: none;
-            border-radius: var(--radius);
-            color: #fff;
-            cursor: pointer;
-            font-family: inherit;
-            font-size: 0.95rem;
-            font-weight: 600;
-            padding: 10px 18px;
-            transition: background 0.2s;
-            white-space: nowrap;
-        }
-
-        .btn:hover, .btn:focus-visible {
-            background: var(--accent-hover);
-        }
-
-        .btn:disabled {
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
-
-        #map {
-            bottom: 0;
-            height: 100%;
-            left: 0;
-            min-height: 100dvh;
-            min-height: 100vh;
-            position: fixed;
-            right: 0;
-            top: 0;
-            width: 100%;
-            z-index: 0;
-        }
-
-        .status {
-            background: var(--surface);
-            border-radius: var(--radius);
-            bottom: calc(24px + var(--safe-bottom));
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-            color: var(--text-muted);
-            display: none;
-            font-size: 0.9rem;
-            left: 16px;
-            padding: 12px 16px;
-            position: fixed;
-            right: 16px;
-            z-index: 5;
-        }
-
-        .status.visible {
-            display: block;
-        }
-
-        .status.error {
-            color: #e07a7a;
-        }
-
-        .status.success {
-            color: var(--accent);
-        }
-        </style>
+        <link rel="stylesheet" href="dist/styles.css">
+        <script src="config.js"></script>
     </head>
     <body>
         <div class="toolbar">
@@ -186,7 +42,7 @@
 
         <script>
         (function () {
-                const GOOGLE_MAPS_API_KEY = "";
+                const GOOGLE_MAPS_API_KEY = window.TRIGO_CONFIG.googleMapsApiKey;
 
                 const statusEl = document.getElementById("status");
                 const radiusSelect = document.getElementById("radius");

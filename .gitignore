@@ -1,0 +1,4 @@
+node_modules/
+dist/
+*.css.map
+config.js

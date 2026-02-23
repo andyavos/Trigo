@@ -1,0 +1,13 @@
+{
+  "name": "trigo",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build:css": "sass src/styles.scss dist/styles.css --style=compressed --no-source-map",
+    "watch:css": "sass src/styles.scss dist/styles.css --watch --style=expanded",
+    "build": "npm run build:css"
+  },
+  "devDependencies": {
+    "sass": "^1.85.0"
+  }
+}
