@@ -178,31 +178,39 @@
                     const bounds = new google.maps.LatLngBounds();
 
                     trigs.forEach(t => {
-                        const pin = new PinElement({
-                            background: "#3d9b7a",
-                            borderColor: "#fff",
-                            scale: 0.8,
-                        });
+                        const pinEl = document.createElement("div");
+                        pinEl.className = "trig-pin" +
+                            (t.type
+                                ? " trig-pin--" + t.type.toLowerCase().replace(/\s+/g, "-")
+                                : "");
                         const marker = new AdvancedMarkerElement({
                             position: { lat: t.lat, lng: t.lon },
                             map,
                             title: t.full_name || t.tp_name,
-                            content: pin.element,
+                            content: pinEl,
                         });
 
-                        const infoContent = [
-                            "<strong>" + (t.full_name || t.tp_name || t.tp_num) +
-                            "</strong>",
-                            t.type ? "<div>Type: " + t.type + "</div>" : "",
-                            t.condition ? "<div>Condition: " + t.condition + "</div>"
-                                : "",
-                            t.height_m ? "<div>Height: " + t.height_m + " m</div>" : "",
-                            '<div style="margin-top:6px; color:#3d9b7a;">' +
-                            t._distance.toFixed(1) + " km away</div>",
-                        ].filter(Boolean).join("");
+                        const infoEl = document.createElement("div");
+                        infoEl.className = "trig-popup";
+                        infoEl.innerHTML =
+                            '<div class="trig-popup__name">' +
+                                (t.full_name || t.tp_name || t.tp_num) +
+                            "</div>" +
+                            (t.type
+                                ? '<div class="trig-popup__meta">Type: ' + t.type + "</div>"
+                                : "") +
+                            (t.condition
+                                ? '<div class="trig-popup__meta">Condition: ' + t.condition + "</div>"
+                                : "") +
+                            (t.height_m
+                                ? '<div class="trig-popup__meta">Height: ' + t.height_m + " m</div>"
+                                : "") +
+                            '<div class="trig-popup__distance">' +
+                                t._distance.toFixed(1) + " km away" +
+                            "</div>";
 
                         const info = new google.maps.InfoWindow({
-                            content: infoContent,
+                            content: infoEl,
                         });
                         marker.addListener("click", () => {
                             info.open(map, marker);
